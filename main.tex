@@ -1,0 +1,565 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{ctex}
+\usepackage{assignpkg}
+\usepackage{xeCJK}
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage{listings,xcolor}
+\usepackage{geometry} % 设置页边距
+\usepackage{fontspec}
+\usepackage{graphicx}
+\usepackage[colorlinks]{hyperref}
+\usepackage{setspace}
+\usepackage{fancyhdr} % 自定义页眉页脚
+\usepackage{enumerate}
+\usepackage{ulem}
+\usepackage{scalerel}
+\usepackage{stackengine}
+\usepackage{xcolor}
+\usepackage{polynom}
+\newcommand\showdiv[1]{\overline{\smash{\hstretch{.5}{)}\mkern-3.2mu\hstretch{.5}{)}}#1}}
+\newcommand\ph[1]{\textcolor{white}{#1}}
+
+
+
+% \newfontfamily\mv{MV Boli}
+% \newcommand\iNx{\mv iNx}
+\newtheorem{thm}{定理}[section]
+\newtheorem{definition}{定义}[section]
+\newtheorem{lemma}{引理}[section]
+\newtheorem{corollary}{推论}[section]
+\newtheorem{prop}{命题}[section]
+\newtheorem{attr}{性质}[section]
+\newtheorem*{prf}{证明}
+\newtheorem{exm}{例}[section]
+\newtheorem*{sol}{解}
+
+
+\setsansfont{Consolas} % 设置英文字体
+\setmonofont[Mapping={}]{Consolas} % 英文引号之类的正常显示，相当于设置英文字体
+
+\linespread{1.2}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\pagestyle{fancy}
+
+\lhead{\CJKfamily{kai} Xi'an JiaoTong University} %以下分别为左中右的页眉和页脚
+\chead{}
+
+\rhead{\CJKfamily{kai} 第 \thepage 页}
+\lfoot{} 
+\cfoot{\thepage}
+\rfoot{}
+\renewcommand{\headrulewidth}{0.4pt} 
+\renewcommand{\footrulewidth}{0.4pt}
+%\geometry{left=2.5cm,right=3cm,top=2.5cm,bottom=2.5cm} % 页边距
+\geometry{left=3.18cm,right=3.18cm,top=2.54cm,bottom=2.54cm}
+\setlength{\columnsep}{30pt}
+
+\makeatletter
+
+\makeatother
+
+\lstset{
+    language    = c++,
+    numbers     = left,
+    numberstyle={                               % 设置行号格式
+        \small
+        \color{black}
+        \fontspec{Consolas}
+    },
+	commentstyle = \color[RGB]{0,128,0}\bfseries, %代码注释的颜色
+	keywordstyle={                              % 设置关键字格式
+        \color[RGB]{40,40,255}
+        \fontspec{Consolas Bold}
+        \bfseries
+    },
+	stringstyle={                               % 设置字符串格式
+        \color[RGB]{128,0,0}
+        \fontspec{Consolas}
+        \bfseries
+    },
+	basicstyle={                                % 设置代码格式
+        \fontspec{Consolas}
+        \small\ttfamily
+    },
+	emphstyle=\color[RGB]{112,64,160},          % 设置强调字格式
+    breaklines=true,                            % 设置自动换行
+    tabsize     = 4,
+    frame       = single,%主题
+    columns     = fullflexible,
+    rulesepcolor = \color{red!20!green!20!blue!20}, %设置边框的颜色
+    showstringspaces = false, %不显示代码字符串中间的空格标记
+	escapeinside={\%*}{*)},
+}
+
+
+% \studentIds{计试91 施劲松}{2193512032}
+% \studentNames{姓名}{学号}
+
+\assignmentName{常微分方程的微分算子法}
+\assignmentNumber{}
+\subTitle{}
+
+\date{}
+
+\begin{document}
+
+\makecover
+
+\section*{序}
+
+余去數學久矣。大二時自以為理清所謂常微分方程之算子法，快然自足，適其時學輔高等數學線上講座，於是欣然參與，作此。今大四矣，翻閱時，多可笑，亦多可嘆。笑者，為其時自得之情，跃然紙上而叙述多不嚴謹之天真而笑；嘆者，為其時慮及此巧計而嘆。今自審而勘誤，存余其時之措辭，其後再讀，亦多感慨。
+
+\section{前言}
+
+\noindent 常微分方程是高等数学上册的最后一章，也是我觉得高数上册最有意思的一章。其中常系数线性微分方程是很经典的一类微分方程（也作为考试考查的内容），这样的方程可以被描述为：
+
+$$
+\sum_{i = 0}^{n} a_i y^{(i)} = f(x)
+$$
+
+\noindent 而一般可以有固定方法求解解析解的 $f(x)$ 被限制为这几类：\textbf{指数型、多项式、三角函数}及其组合。我们知道每个方程的解可以由齐次方程的解加上任何一个特解表示，而齐次方程的解法由一元多次方程在复数域上的\textbf{根}确定。所以关键问题在于怎么确定方程的一个特解 $y_p$，众所周知，在高等数学中我们是用\textbf{待定系数法}做到的，但当 $f(x)$ 组合了三种形式，待定系数法将变得非常复杂，当时我学习了MIT的一门公开课\textbf{常微分方程}，觉得里面介绍的\textbf{微分算子法}非常清晰且方便，但它仅仅说明了二阶的情况，并且没有给出 $f(x)$ 为多项式时该如何处理。但实际上该方法可以作用于 $n$ 阶的方程，并且也可以使用于 $f(x)$ 为多项式的情况。但是网上关于介绍该方法的文章少之又少并且大多只重结论，有点云里雾里的感觉。于是打算将这些理论严谨地进行解释一遍，并曾经在知乎上发过关于 $f(x)$ 为指数型和三角函数的解法及证明，很长时间我都没有仔细想多项式的情况，现今恰好在电路课程上遇到了常系数微分方程，故细想了一番，在此做一个总结。
+
+\section{什么是算子}
+
+\noindent 在大一的时候我们已经接触了不少的“算子”，比如大多数人可以记得的就是多元函数引入了 $\nabla$ 算子，在场论中还出现了 $\Delta$ 算子（拉普拉斯算子）。其实简单来说，算子就是一种映射，不过这种映射可能是从函数空间到函数空间的。从表面上看，算子就起到一种简洁表达的效果，其实其巨大威力远远不止于此，我自己能力有限，也知之甚少。另外科研发现其实求导也可以看成是算子，我们定义微分算子符号：
+
+$$
+D^n = \frac{\mathrm{d}^n}{\mathrm{d}x^n}
+$$
+
+\noindent 那么例如 $y'$ 就可以写成 $Dy$，而对于二阶线性微分方程
+
+$$
+y'' + Ay' + B = f(x)
+$$
+
+\noindent 可以写成
+
+$$
+(D^2+AD+B)y = f(x)
+$$
+
+\noindent 记多项式 $P(x) = x^2 + Ax + B$，则上式又可以写成：
+
+$$
+P(D)y = f(x)
+$$
+
+\noindent 所以这样到底有什么好呢，这样的形式容易让人想到实数域内，如果 $kx = b$ 且 $k\neq 0$，则
+
+$$
+x = \frac{b}{k}
+$$
+
+\noindent 也就是我们如果能理解 $\frac{1}{P(D)}$ 的涵义，那我们就能求出 $y = \frac{f(x)}{P(D)}$ ！如果 $P(D) = D$，那么我们其实很容易想到 $\frac{1}{D}$ 就是积分，但是当 $P(D)$ 复杂起来积分就显得很不准确，但是简单来说，就应该是求导的逆运算。接下来我们就由浅入深分析一下。注意接下来的微分方程若没有明确说明则为：
+$$
+P(D)y = f(x)
+$$
+而 $y_p$ 是其一个特解。
+
+\section{$f(x)=e^{ax}$}
+
+\noindent 首先我们研究 $f(x) = e^{ax}$ 的情况。
+
+\subsection{$P(a) \neq 0$}
+
+\begin{prop}[指数代换法则]
+$a\in \mathbb{R}$，则有：
+$$
+P(D)e^{ax} = P(a)e^{ax}
+$$
+\end{prop}
+
+\begin{prf}
+\noindent 注意到 $P(D)$ 是由 $1, D, D^2, \ldots$ 及其线性组合表示的，故我们只要证明：
+$$
+D^n e^{ax} = a^n e^{ax}
+$$
+而这是显然的（可以考虑迭代或者数学归纳法）。
+    \qed
+\end{prf}
+
+\noindent 接下来用此证明一个重要结论：
+
+\begin{thm}[指数输入定理]
+若 $P(D)y = e^{ax}$，则一个特解
+$$
+y_p = \frac{e^{ax}}{P(a)}(\text{当}P(a)\neq 0 \text{时})
+$$
+\end{thm}
+
+\noindent 这个定理告诉我们，一个特解就是把 $P(D)$ 除到右边并且将指数上 $x$ 的系数带到 $P(D)$ 中将 $D$ 替换即可！
+
+\begin{prf}
+若要证明 $y_p$ 确实是方程一个特解，只要把它带回去验证即可，则由\textbf{指数代换法则}：
+\begin{align*}
+    P(D)y_p &= P(D)\frac{e^{ax}}{P(a)}\\
+    &= \frac{P(a)e^{ax}}{P(a)}\\
+    &= e^{ax} = f(x)
+\end{align*}
+故 $y_p$ 是原方程一个特解。
+    \qed
+\end{prf}
+
+\noindent 注意到三角函数其实是可以用指数来表示的，即\textbf{欧拉公式}：
+$$
+e^{ix} = \cos x + i \sin x
+$$
+\noindent 而这有什么用呢？由于复变函数的求导可以简单理解为分别对实部和虚部求导，于是容易证明对于一个在复数域上的微分方程（但 $P(x)\in R[x]$，就是 $P(x)$ 是实系数的多项式）
+$$
+P(D)y = f(x)
+$$
+的特解 $y_p$ 的实部恰好是
+$$
+P(D)y = \Re(f(x))
+$$
+的特解，同样的其虚部是
+$$
+P(D)y = \Im(f(x))
+$$
+的特解。所以对于 $f(x)$ 是三角函数的情况完全可以转化为指数型来解决，最后根据要求保留实部或者虚部即可。所以本节讨论的 $e^{ax}$ 中的 $a$ 可以是任意的复数，即 $a \in \mathbb{C}$。
+
+\begin{exm}
+求微分方程
+$$
+y'' - y' + 2y = 10e^{-x}\sin x
+$$
+的一个特解。
+\end{exm}
+\begin{sol}
+首先将方程\textbf{复化}：
+$$
+(D^2-D+2)\tilde{y}=10e^{(i-1)x}
+$$
+由于 $\sin x = \Im(e^{ix})$，所以最后 $\tilde{y}_p$ 的虚部就是一个特解。由\textbf{指数输入定理}：
+\begin{align*}
+    \tilde{y}_p &= \frac{10e^{(i-1)x}}{(i-1)^2-(i-1)+2}\\
+    &= \frac{10e^{(i-1)x}}{-2i+i-1+2}\\
+    &= \frac{10e^{-x}(\cos x + i \sin x)}{3 - 3i}\\
+    &= \frac{5}{3}(1+i)e^{-x}(\cos x + i \sin x)\\
+\end{align*}
+取其虚部，故
+$$
+y_p = \frac{5}{3}e^{-x}(\cos x + \sin x)
+$$
+\end{sol}
+
+\noindent 到现在其实已经得到一个挺不错的结果了，但这其实还不够。注意到\textbf{指数输入定理}中要求 $P(a) \neq 0$，因为分母显然是不能为 $0$ 的。但是在实际中，$P(a) = 0$ 的情况比比皆是。所以有以下命题：
+\begin{prop}[指数移位法则]
+$a\in \mathbb{C}$，则有：
+$$
+P(D)e^{ax}u(x) = e^{ax}P(D+a)u(x)
+$$
+\end{prop}
+\begin{prf}
+为方便表示，我们将 $u(x)$ 写作 $u$，类似代换法则，其实只需要证明：
+$$
+D^ne^{ax}u = e^{ax}(D+a)^nu
+$$
+那么很明显可以利用数学归纳法：
+\begin{enumerate}[(1)]
+    \item 当 $n=1$ 时，
+$$
+De^{ax}u = ae^{ax}u + e^{ax}Du = e^{ax}(D+a)u
+$$
+故该命题在 $n=1$ 时正确；
+    \item 假设 $n = k-1$ 时命题正确，则当 $n=k$ 时：
+\begin{align*}
+    D^ke^{ax}u &= D(D^{k-1}e^{ax}u)\\
+    &= D(e^{ax}(D+a)^{k-1}u)\\
+    &= e^{ax}(D+a)^{k}u
+\end{align*}
+故该命题正确。
+\end{enumerate}
+\qed
+\end{prf}
+
+\noindent 这个命题的作用将在下一小节揭晓。
+
+\subsection{二阶微分方程}
+
+\noindent 一般我们只会求解二阶常系数微分方程，因为正常人是不会解三次及以上（甚至五次及以上是没有根式解的）的方程的，所以我们先由二阶微分方程入手。
+
+\noindent 显然如果 $P(a) \neq 0$，前文已经有更强的结论可以解决这一问题，所以现在讨论 $P(a) = 0$ 的情况。很明显，这点说明 $a$ 是方程 $P(x)=0$ 的一个根。而学过\textbf{待定系数法}后也知道应该分两种情况讨论，第一种是\textbf{单根}，另一种则是\textbf{重根}。
+
+\begin{thm}[单根指数输入定理]
+若 $a$ 是 $P(x) = 0$ 的一个单根，则有：
+$$
+y_p = \frac{e^{ax}x}{P'(a)}
+$$
+\end{thm}
+\begin{prf}
+\noindent 不妨设 $a,b(a\neq b)$ 是 $P(x) = 0$ 的两个根，为方便起见，我们假设 $P(x)$ 的最高次项系数为 $1$。那么有：
+$$
+P(D) = (D-a)(D-b)
+$$
+所以
+$$
+P'(D) = 2D - a - b
+$$
+故有 $P'(a) = a - b$，于是将 $y_p$ 代入原方程：
+\begin{align*}
+P(D)\frac{e^{ax}x}{P'(a)} &= \frac{e^{ax}P(D+a)x}{P'(a)}\\
+&= \frac{e^{ax}(D+a-b)Dx}{a - b}\\
+&= \frac{e^{ax}(a-b)}{a-b}\\
+&= e^{ax}
+\end{align*}
+故 $y_p$ 确实是原方程的特解。
+    \qed
+\end{prf}
+
+\begin{thm}[二重根指数输入定理]
+若 $a$ 是 $P(x) = 0$ 的重根，则有：
+$$
+y_p = \frac{e^{ax}x^2}{P''(a)}
+$$
+\end{thm}
+\noindent 证明与前面一种相仿，把 $P(D) = (D-a)^2$ 代入检验即可，在此不再给出证明。
+
+\begin{exm}
+求微分方程
+$$
+y'' - 3y' + 2y = e^x
+$$
+的一个特解。
+\end{exm}
+
+\begin{sol}
+由于 $P(D) = D^2 - 3D + 2$，而 $1$ 恰好是 $P(x) = 0$ 的一个单根，故由单根指数输入定理：
+\begin{align*}
+    y_p &= \frac{e^x x}{P'(1)}\\
+    &= \frac{e^x x}{2 - 3}\\
+    &= -xe^x
+\end{align*}
+\end{sol}
+
+\subsection{一般情况下的指数输入定理}
+
+\noindent 由二阶微分方程特解的形式，不难猜测当 $a$ 是 $P(x) = 0$ 的 $n$ 重根时，有：
+$$
+y_p = \frac{e^{ax}x^n}{P^{(n)}(a)}
+$$
+并且注意若 $a$ 不是 $P(x) = 0$ 的根的话，可以把它理解为 $0$ 重根，$P(D)$ 理解为 $P^{(0)}(D)$，则上式同样适用。因此有如下定理：
+
+\begin{thm}[指数输入定理]
+$a\in \mathbb{C}$ 且 $a$ 是 $P(x) = 0$ 的 $n$ 重根，则有：
+$$
+y_p = \frac{e^{ax}x^n}{P^{(n)}(a)}
+$$
+\end{thm}
+
+\begin{prf}
+由于 $a$ 是 $n$ 重根，故可以将 $P(D)$ 表示为：
+$$
+(D-a)^n\tilde{P}(D)
+$$
+则：
+$$
+P^{(n)}(D) = n!\tilde{P}(D) + (D-a)Q(D)
+$$
+$Q(D)$ 表示另一个多项式诱导的算子，简单说就是后面那项有因式 $(D-a)$。于是 $P^{(n)}(a) = n!\tilde{P}(a)$。接着将 $y_p$ 代回原方程：
+\begin{align*}
+    P(D)\frac{e^{ax}x^n}{P^{(n)}(a)} &= \frac{e^{ax}P(D+a)x^n}{P^{(n)}(a)}\\
+    &= \frac{e^{ax}\tilde{P}(D+a)D^n x^n}{n!\tilde{P}(a)}\\
+    &= \frac{e^{ax}\tilde{P}(D+a)n!}{n!\tilde{P}(a)}\\
+    &= \frac{e^{ax}\tilde{P}(a)n!}{\tilde{P}(a)n!}\\
+    &= e^{ax}
+\end{align*}
+故 $y_p$ 是原方程的特解。
+    \qed
+\end{prf}
+
+\noindent 至此已经完美解决了三角函数和指数函数及其复合的形式，其特解可以直接利用\textbf{\Large {指数输入定理}}计算得到。就结论的形式都是待定系数法望尘莫及的。
+
+\section{$f(x)$ 为多项式}
+
+\noindent 首先做几个简单的分析：
+\begin{enumerate}[(1)]
+    \item 若 $P(D) = D$，也就是
+    $$
+    y' = f(x)
+    $$
+    那显然直接求导就可以了。
+    \item 否则 $P(D)$ 应该是什么形式？我们可以理解 $P(D)$ 中必定有常数项，这是因为如果没有常数项，例如：
+    $$
+    y'' - y' = f(x)
+    $$
+    那么完全可以把它理解为 $p' - p = f(x)$，而 $p = y'$，求得 $p$ 再积分就可以了。
+\end{enumerate}
+
+\noindent 这样分析之后，我们知道方程中理应当可以表示成：
+$$
+\sum_{i = 1}^{\infty} a_iy^{(i)} + a_0y = f(x)
+$$
+并且 $a_0 \neq 0$，否则我们可以通过适当换元解决这一问题。注意到右边的 $f(x)$ 是一个多项式，每次求导只会让它次数减少，且我们也知道存在某个特解是多项式的形式，然而左边存在 $y$ 的项，那么这个特解 $y_p$ 的次数必然不会超过 $f(x)$ 的次数。更大胆的想法就是 $y_p$ 是 $f(x)$ 各阶导数若干项的线性组合。
+
+\noindent 先看一个简单的例子：
+\begin{exm}
+求微分方程
+$$
+-y' + y = x
+$$
+的一个特解。
+\end{exm}
+\noindent 显然随便构造都可以得到一个特解 $y_p = x + 1$。这个方程用算子的方法可以写成：
+$$
+(-D + 1)y = x
+$$
+如果很大胆地把算子除到右边，则有：
+$$
+y = \frac{x}{1-D}
+$$
+如果想到 $\frac{1}{1-D}$ 的泰勒级数：
+$$
+\frac{1}{1-D} = 1+D+D^2+D^3+\ldots
+$$
+并且更加大胆地将其代入：
+$$
+y = (1+D+D^2+\ldots)x = x + 1
+$$
+神奇的事情发生了！一个特解得到了！由于多项式 $x$ 是有限导的，所以 $D^2,D^3,\ldots$ 都没有必要考虑，因为其作用于 $x$ 都会得到 $0$。\\
+\noindent 但是稍微学过无穷级数的人都会知道
+$$
+\sum_{i = 0}^{\infty}x^i \text{收敛到} \frac{1}{1-x}
+$$
+是有条件的，$x\in(-1,1)$，而这个 $D$ 是根本没有什么度量概念的！所以其实我们是在考虑 $\frac{1}{P(D)}$ 的\textbf{形式幂级数}，也就是不考虑其收敛性，只考虑其形式。
+
+\noindent 但是关键的问题是，这样做到底对不对？为什么对或者为什么不对。如果考虑 $1+D+D^2+\ldots+D^{n-1}$ 这 $n$ 项，那么就有：
+$$
+(1-D)(1+D+D^2\ldots+D^{n-1})=(1-D)\frac{1-D^n}{1-D} = 1-D^n
+$$
+\sout{他说我这也没用，我说我这有用。}如果记 $Q_n(D) = 1+D+D^2+\ldots+D^{n-1}$，那么我们期望答案是
+$$
+Q(D)f(x) = \lim_{n\to \infty} Q_n(D)f(x)
+$$
+那么将其代回方程，并且注意到将算子 $D$ 作为多项式不定元的多项式（乘法\footnote{修订补，应指算子的多项式乘法具有结合律}）是具有\textbf{结合律}的：
+\begin{align*}
+    P(D)\left(Q(D)f(x)\right) &= \left(P(D)Q(D)\right)f(x)\\
+    &= \lim_{n\to \infty}(1-D^n) f(x)\\
+    &= f(x)
+\end{align*}
+所以现在要求解问题只需要把 $\frac{1}{P(D)}$ 的形式幂级数求出，这可以利用泰勒展开的方法或者利用\textbf{多项式除法}。个人觉得多项式除法更为完美，多项式的除法一般用的是\textbf{长除法}，并且原则是从高位向低位依次消去高次项，而在此处则反过来，从低位往高位消。
+
+\begin{center}
+    \polylongdiv{x^4+2x^3+4x^2+x+1}{x+1}
+\end{center}
+
+\noindent 上面是正常情况下的长除法，长除法可以对给定的被除式 $f(x)$，除式 $g(x)$，可以找到 $h(x)$，使得：
+$$
+f(x) = h(x)g(x)+r(x)
+$$
+其中 $r(x)$ 次数小于 $f(x)$，即 $deg(r(x))<deg(f(x))$。而对于一般的 $P(D)$，我们利用相反的方法，找到一个 $H(D)$，使得：
+$$
+1 = P(D)H(D) + R(D)
+$$
+而 $R(D)$ 的最低次数是可以无限增大的，于是我们记长除法第 $k$ 次的余式为 $R_k(D)$，商式 $H_k(D)$，于是有：
+$$
+P(D)H_k(D) = 1 - R_k(D)
+$$
+并记
+\begin{align*}
+    \lim_{k\to \infty}H_k(D) = H(D) \\ \lim_{k\to \infty} R_k(D) = R(D)
+\end{align*}
+那么将 $H(D)f(x)$ 代入原方程：
+\begin{align*}
+    P(D)\left(H(D)f(x)\right)&=\left(P(D)H(D)\right)f(x)\\
+    &=\left(\lim_{k\to \infty}P(D)H_k(D)\right)f(x)\\
+    &=\left(\lim_{k\to \infty}(1-R_k(D))\right)f(x)\\
+    &=f(x)
+\end{align*}
+所以很自然的，我们有如下定义：
+\begin{definition}
+若 $P(D)$ 中常数项不为 $0$，我们定义：
+$$
+\frac{1}{P(D)} := H(D)
+$$
+\end{definition}
+\noindent 那么由上文的讨论，当 $f(x)$ 为多项式时其特解形式已经得到了：
+\begin{thm}
+若 $f(x)$ 是有限次的多项式，那么对于微分方程 $P(D)y = f(x)$，其一个特解为：
+$$
+y_p = \frac{1}{P(D)}f(x)
+$$
+\end{thm}
+\begin{exm}
+求微分方程
+$$
+y''+y'+y = 3x^2+4x
+$$
+的一个特解。
+\end{exm}
+\begin{sol}
+利用多项式长除法求得
+$$
+\frac{1}{P(D)} = 1-D+D^3+\ldots
+$$
+故：
+\begin{align*}
+    y_p &= \frac{1}{P(D)}(3x^2+4x)\\
+    &= (1-D+D^3+\ldots)(3x^2+4x)\\
+    &= 3x^2-2x-4
+\end{align*}
+\end{sol}
+
+\noindent 那么目前为止已经基本解决了常系数微分方程特解的问题，只剩下最后一个问题，如果是指数（包括了三角函数）和多项式结合的情况呢？
+
+\begin{thm}
+若 $f(x) = e^{ax}g(x)$，$g(x)$ 为有限次的多项式，则：
+$$
+y_p = e^{ax}\frac{1}{P(D+a)}f(x)
+$$
+\end{thm}
+
+\noindent 其实如果前面的已经理解了，这步其实很容易得到，只不过是移位法则的推论。当然这个公式是否真的就完美了呢？其实不是，只要多试或者多想，就会发现，有可能会出现 $P(D+a)$ 常数项为 $0$ 的情况。但这不足为虑，因为移位法则其实在表明这样一个事实：只要把 $P(D+a)y=f(x)$ 的特解乘上 $e^{ax}$ 就是原方程特解。所以就回到了一开始讨论的问题，可以先把 $D^k$ 提取出来，最后再一步步积分即可。
+
+\noindent 为了让结论“更正确”，我们对 $\frac{1}{P(D)}$ 的定义进行修正：
+\begin{definition}
+定义微分算子的倒数
+$$
+\frac{1}{D^k} := \underbrace{\int \int \ldots \int}_{k\text{个}\int}
+$$
+而对于任意定义在 $\mathbb{R}[D]$ 上的多项式 $P(D) = D^kQ(D)$，其中 $D \nmid Q(D)$，我们定义：
+$$
+\frac{1}{P(D)} := \frac{1}{D^k}\frac{1}{Q(D)}
+$$
+\end{definition}
+\begin{exm}
+求微分方程
+$$
+y''+4y=x\cos x
+$$
+的一个特解。
+\end{exm}
+\begin{sol}
+复化：
+$$
+(D^2+4)\tilde{y} = e^{ix}x
+$$
+故：
+\begin{align*}
+    \tilde{y}_p &= e^{ix}\frac{1}{(D+i)^2 + 4}x\\
+    &= e^{ix}\frac{1}{D^2+2iD+3}x\\
+    &= e^{ix}(\frac{1}{3}-\frac{2}{9}iD+\ldots)x\\
+    &= (\cos x + i\sin x)(\frac{x}{3}-\frac{2}{9}i)
+\end{align*}
+故：
+$$
+y_p = \Re(\tilde{y}_p) = \frac{x}{3}\cos x + \frac{2}{9}\sin x
+$$
+\end{sol}
+
+\section{结语}
+
+\noindent 本文有个很大的缺陷就是没有给出 $1 \div P(D)$ 的一个例子，这是由于我实在不知道怎么用 \LaTeX 写自定义的长除法，能力有限...于是写了一个一般的多项式长除法，希望读者能受到启发。
+
+\noindent 微分算子法本身还是偏向技巧的，实用性的，但实际上就算不管它的解题效率高不高，其形式其实是非常优美的，原来导数这样的算子也能定义其逆运算，虽然本文是限定了 $f(x)$ 的范围然后才进行地讨论，在算子巨大用处中也可能只是冰山一角。但是多项式函数和指数函数其实是两类函数的典型代表——有限阶可导函数和无限阶可导函数，所以典型问题能不能引出更深的问题呢？在此我无法做出回答，本人水平和精力有限，并没有再深究了。
+
+\noindent 所以对于任给的 $f(x)$ 到底有没有办法求解？我不知道，但是可以利用级数这个强有力的工具去逼近我们的解。前文讨论中已经说明三角函数和指数型函数可解且有较优秀的解法，于是容易想到用傅里叶级数去拟合一个函数可以做到这点。所以理论上，已经可以较为优秀地解决常系数线性常微分方程了。
+
+\end{document}
